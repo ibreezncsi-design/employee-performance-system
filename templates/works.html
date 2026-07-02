@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>الأعمال</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h2>
+        مرحباً {{ name }} 👋
+    </h2>
+
+<div class="d-flex gap-2 align-items-center">
+
+    <button
+        id="notificationBtn"
+        class="btn btn-warning position-relative"
+        data-bs-toggle="collapse"
+        data-bs-target="#notificationsBox">
+
+        🔔
+
+        {% if notifications|length > 0 %}
+        <span
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ notifications|length }}
+        </span>
+        {% endif %}
+
+    </button>
+
+    <a href="/evaluations" class="btn btn-warning">
+        التقييمات
+    </a>
+
+        <a href="/export-report" class="btn btn-success">
+            📥 تنزيل بياناتي
+        </a>
+
+        <a href="/logout" class="btn btn-danger">
+            تسجيل الخروج
+        </a>
+
+    </div>
+
+</div>
+<div class="collapse mb-3" id="notificationsBox">
+
+    <div class="card">
+
+        <div class="card-header d-flex justify-content-between">
+
+    <span>الإشعارات</span>
+
+    <a
+        href="/clear-notifications"
+        class="btn btn-sm btn-danger"
+        onclick="return confirm('هل تريد حذف جميع الإشعارات؟')"
+    >
+        مسح الكل
+    </a>
+
+</div>
+
+<div class="card-body">
+
+{% if notifications %}
+
+    {% for n in notifications %}
+
+    <div class="alert alert-light mb-2 d-flex justify-content-between align-items-center">
+
+      {% if n["evaluation_id"] %}
+
+<a
+href="/evaluations#evaluation{{ n['evaluation_id'] }}"
+class="text-decoration-none flex-grow-1">
+    {{ n["message"] }}
+</a>
+
+{% else %}
+
+<a
+href="#work{{ n['work_id'] }}"
+class="text-decoration-none flex-grow-1">
+    {{ n["message"] }}
+</a>
+
+{% endif %}
+
+        <a
+        href="/delete-notification/{{ n['id'] }}"
+        class="btn btn-sm btn-outline-danger ms-2"
+        onclick="return confirm('حذف الإشعار؟')">
+
+            ✕
+
+        </a>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+    <div class="text-muted">
+        لا توجد إشعارات
+    </div>
+
+{% endif %}
+
+</div>
+
+    </div>
+
+</div>
+
+
+    <div class="card shadow p-4">
+
+        <h4 class="mb-4">
+            إضافة عمل جديد
+        </h4>
+
+        <form method="POST" action="/works">
+            <input
+type="hidden"
+name="work_id"
+id="work_id"
+>
+
+            <div class="mb-3">
+
+                <label>السنة</label>
+
+                <select name="year" class="form-select" required>
+
+                    <option>2026</option>
+
+                </select>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>الفترة</label>
+
+                <select name="period" class="form-select" required>
+
+                    <option>النصف الأول</option>
+                    <option>النصف الثاني</option>
+
+                </select>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>نوع العمل</label>
+
+                <select name="work_type" id="work_type" class="form-select" required>
+
+                    <option>مشاركة الاستطلاعات</option>
+                    <option>مشاركة الاجتماعات</option>
+                    <option>مراجعة الاستمارات</option>
+                    <option>تقارير إلكترونية</option>
+                    <option>تقارير ورقية</option>
+                    <option>تنظيف عينات</option>
+                    <option>إشراف جهات</option>
+                    <option>دراسة طلبات</option>
+                    <option>أعمال مبتكرة</option>
+                    <option>دورات وأوراق عمل</option>
+                    <option>متابعة برامج وتطبيقات الدائرة</option>
+
+                </select>
+
+            </div>
+            <div id="dateFields" style="display:none;">
+
+                <div class="mb-3">
+                    <label>تاريخ البدء</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label>تاريخ الانتهاء</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label>الأيام المحددة</label>
+
+                    <select id="target_days" name="target_days" class="form-select">
+                        <option value="">اختر</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>تفاصيل العمل</label>
+
+                <textarea name="work_details" class="form-control" required></textarea>
+
+            </div>
+
+            <button
+type="submit"
+id="saveBtn"
+class="btn btn-success"
+>
+حفظ
+</button>
+        </form>
+
+    </div>
+<hr class="my-4">
+
+<h4>
+    أعمالي
+</h4>
+
+<table class="table table-bordered">
+
+    <thead>
+
+<tr>
+    <th>#</th>
+    <th>الموظف</th>
+    <th>السنة</th>
+    <th>الفترة</th>
+    <th>نوع العمل</th>
+    <th>التفاصيل</th>
+    <th>تاريخ البدء</th>
+    <th>تاريخ الانتهاء</th>
+    <th>الأيام الفعلية</th>
+    <th>الأيام المحددة</th>
+    <th>الحالة</th>
+<th>ملاحظة المدير</th>
+    <th>إجراءات</th>
+</tr>
+
+    </thead>
+
+    <tbody>
+{% for row in works %}
+<tr id="work{{ row['id'] }}">
+
+    <td>{{ row["id"] }}</td>
+
+    <td>{{ user_names[row["user_email"]] }}</td>
+
+    <td>{{ row["year"] }}</td>
+
+    <td>{{ row["period"] }}</td>
+
+    <td>{{ row["work_type"] }}</td>
+
+    <td>{{ row["work_details"] }}</td>
+
+    <td>{{ row["start_date"] or "-" }}</td>
+
+    <td>{{ row["end_date"] or "-" }}</td>
+
+    <td>{{ row["actual_days"] or "-" }}</td>
+
+    <td>{{ row["target_days"] or "-" }}</td>
+    <td>
+
+{% if row["status"] == "approved" %}
+<span class="badge bg-success">
+معتمد
+</span>
+
+{% elif row["status"] == "returned" %}
+<span class="badge bg-warning text-dark">
+مرجع
+</span>
+
+{% else %}
+<span class="badge bg-secondary">
+بانتظار الاعتماد
+</span>
+
+{% endif %}
+
+</td>
+
+<td>
+{{ row["admin_note"] or "-" }}
+</td>
+    <td>
+
+<button
+type="button"
+class="btn btn-sm btn-warning"
+onclick="editWork(
+'{{ row["id"] }}',
+'{{ row["year"] }}',
+'{{ row["period"] }}',
+'{{ row["work_type"] }}',
+'{{ row["work_details"] }}',
+'{{ row["start_date"] or "" }}',
+'{{ row["end_date"] or "" }}',
+'{{ row["target_days"] or "" }}'
+)"
+>
+تعديل
+</button>
+
+<a
+href="/delete-work/{{ row['id'] }}"
+class="btn btn-sm btn-danger"
+onclick="return confirm('هل تريد حذف العمل؟')"
+>
+حذف
+</a>
+
+</td>
+
+</tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+</div>
+<script>
+function editWork(
+id,
+year,
+period,
+workType,
+details,
+startDate,
+endDate,
+targetDays
+){
+
+document.querySelector('select[name="year"]').value = year;
+document.querySelector('select[name="period"]').value = period;
+document.querySelector('select[name="work_type"]').value = workType;
+document.querySelector('textarea[name="work_details"]').value = details;
+document.getElementById("work_id").value = id;
+document.getElementById("saveBtn").innerText = "تحديث";
+
+document.getElementById("start_date").value = startDate;
+document.getElementById("end_date").value = endDate;
+document.getElementById("target_days").value = targetDays;
+document.getElementById("work_id").value = id;
+document.getElementById("saveBtn").innerText = "تحديث";
+
+toggleDates();
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+}
+
+const workType = document.getElementById("work_type");
+const dateFields = document.getElementById("dateFields");
+
+function toggleDates() {
+
+    const value = workType.value;
+
+    if (
+        value === "تقارير إلكترونية" ||
+        value === "تقارير ورقية" ||
+        value === "دراسة طلبات"
+    ) {
+        dateFields.style.display = "block";
+    }
+    else {
+        dateFields.style.display = "none";
+    }
+}
+
+workType.addEventListener("change", toggleDates);
+
+document.querySelector("form").addEventListener("submit", function(e){
+
+    const workType = document.getElementById("work_type").value;
+
+    if(
+        workType === "تقارير إلكترونية" ||
+        workType === "تقارير ورقية" ||
+        workType === "دراسة طلبات"
+    ){
+
+        const startDate = document.getElementById("start_date").value;
+        const endDate = document.getElementById("end_date").value;
+        const targetDays = document.getElementById("target_days").value;
+
+        if(!startDate || !endDate || !targetDays){
+
+            alert("يرجى تعبئة تاريخ البدء وتاريخ الانتهاء والأيام المحددة");
+
+            e.preventDefault();
+        }
+    }
+
+});
+
+toggleDates();
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+document
+.getElementById("notificationBtn")
+.addEventListener("click", function(){
+
+    fetch("/mark-notifications-read");
+
+    const badge =
+    document.querySelector(".badge");
+
+    if(badge){
+        badge.remove();
+    }
+
+});
+
+</script>
+</body>
+</html>
