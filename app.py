@@ -890,6 +890,33 @@ def test_weights():
 
     return result
 
+@app.route("/health")
+def health():
+    return "APP IS RUNNING"
+
+
+@app.route("/check-db")
+def check_db():
+    conn = get_db()
+    c = conn.cursor()
+
+    result = []
+
+    result.append("WORKS COLUMNS:")
+    for col in c.execute("PRAGMA table_info(works)").fetchall():
+        result.append(col[1])
+
+    result.append("<hr>EVALUATIONS COLUMNS:")
+    for col in c.execute("PRAGMA table_info(evaluations)").fetchall():
+        result.append(col[1])
+
+    result.append("<hr>NOTIFICATIONS COLUMNS:")
+    for col in c.execute("PRAGMA table_info(notifications)").fetchall():
+        result.append(col[1])
+
+    conn.close()
+    return "<br>".join(result)
+
 
 @app.route("/clear-weights")
 def clear_weights():
