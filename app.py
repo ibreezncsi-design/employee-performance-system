@@ -439,10 +439,7 @@ def evaluations():
 
     selected_employee = request.args.get("employee", "الكل")
     selected_period = request.args.get("period", "الكل")
-    selected_status = request.args.get(
-    "status",
-    "الكل"
-)
+    selected_status = request.args.get("status","الكل")
 
     conn = get_db()
     c = conn.cursor()
@@ -703,6 +700,7 @@ def admin():
     "status",
     "الكل"
 )
+    selected_work_type = request.args.get("work_type", "الكل")
 
     conn = get_db()
     c = conn.cursor()
@@ -726,6 +724,10 @@ def admin():
     if selected_status != "الكل":
         query += " AND status = ?"
         params.append(selected_status)
+
+    if selected_work_type != "الكل":
+        query += " AND work_type = ?"
+        params.append(selected_work_type)
 
     query += " ORDER BY id DESC"
 
@@ -796,6 +798,7 @@ def admin():
         selected_employee=selected_employee,
         selected_period=selected_period,
         selected_status=selected_status,
+        selected_work_type=selected_work_type,
         user_names={
             email: info["name"]
             for email, info in ALLOWED_USERS.items()

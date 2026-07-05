@@ -259,7 +259,116 @@ onchange="this.form.submit()">
 </select>
 
 </div>
+<div class="col-md-3">
 
+    <label class="form-label">
+        نوع العمل
+    </label>
+
+    <select
+        class="form-select"
+        name="work_type"
+        onchange="this.form.submit()"
+    >
+        <option value="الكل"
+            {% if selected_work_type == "الكل" %}
+            selected
+            {% endif %}
+        >
+            كل الأنواع
+        </option>
+
+        <option value="مشاركة الاستطلاعات"
+            {% if selected_work_type == "مشاركة الاستطلاعات" %}
+            selected
+            {% endif %}
+        >
+            مشاركة الاستطلاعات
+        </option>
+
+        <option value="مشاركة الاجتماعات"
+            {% if selected_work_type == "مشاركة الاجتماعات" %}
+            selected
+            {% endif %}
+        >
+            مشاركة الاجتماعات
+        </option>
+
+        <option value="مراجعة الاستمارات"
+            {% if selected_work_type == "مراجعة الاستمارات" %}
+            selected
+            {% endif %}
+        >
+            مراجعة الاستمارات
+        </option>
+
+        <option value="تقارير إلكترونية"
+            {% if selected_work_type == "تقارير إلكترونية" %}
+            selected
+            {% endif %}
+        >
+            تقارير إلكترونية
+        </option>
+
+        <option value="تقارير ورقية"
+            {% if selected_work_type == "تقارير ورقية" %}
+            selected
+            {% endif %}
+        >
+            تقارير ورقية
+        </option>
+
+        <option value="تنظيف عينات"
+            {% if selected_work_type == "تنظيف عينات" %}
+            selected
+            {% endif %}
+        >
+            تنظيف عينات
+        </option>
+
+        <option value="إشراف جهات"
+            {% if selected_work_type == "إشراف جهات" %}
+            selected
+            {% endif %}
+        >
+            إشراف جهات
+        </option>
+
+        <option value="دراسة طلبات"
+            {% if selected_work_type == "دراسة طلبات" %}
+            selected
+            {% endif %}
+        >
+            دراسة طلبات
+        </option>
+
+        <option value="أعمال مبتكرة"
+            {% if selected_work_type == "أعمال مبتكرة" %}
+            selected
+            {% endif %}
+        >
+            أعمال مبتكرة
+        </option>
+
+        <option value="دورات وأوراق عمل"
+            {% if selected_work_type == "دورات وأوراق عمل" %}
+            selected
+            {% endif %}
+        >
+            دورات وأوراق عمل
+        </option>
+
+        <option value="متابعة برامج وتطبيقات الدائرة"
+            {% if selected_work_type == "متابعة برامج وتطبيقات الدائرة" %}
+            selected
+            {% endif %}
+        >
+            متابعة برامج وتطبيقات الدائرة
+        </option>
+
+    </select>
+
+</div>
 </div>
 
 </form>
