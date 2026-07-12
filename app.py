@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
+import os
+import psycopg2
+from psycopg2.extras import DictCursor
 from datetime import datetime
 import pandas as pd
 from flask import send_file
@@ -60,16 +62,19 @@ ALLOWED_USERS = {
         "role": "admin"
     }
 }
-app.secret_key = "employee_secret_key"
+app.secret_key = os.environ.get("SECRET_KEY", "employee_secret_key")
 
 
 def get_db():
-    conn = sqlite3.connect(
-        "users.db",
-        timeout=30
+    database_url = os.environ.get("DATABASE_URL")
+
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured")
+
+    return psycopg2.connect(
+        database_url,
+        cursor_factory=DictCursor
     )
-    conn.row_factory = sqlite3.Row
-    return conn
 
 def add_notification(c, email, message, work_id=None, evaluation_id=None):
 
@@ -77,8 +82,8 @@ def add_notification(c, email, message, work_id=None, evaluation_id=None):
 
         c.execute("""
             DELETE FROM notifications
-            WHERE user_email = ?
-            AND work_id = ?
+            WHERE user_email = %s
+            AND work_id = %s
         """, (
             email,
             work_id
@@ -88,8 +93,8 @@ def add_notification(c, email, message, work_id=None, evaluation_id=None):
 
         c.execute("""
             DELETE FROM notifications
-            WHERE user_email = ?
-            AND evaluation_id = ?
+            WHERE user_email = %s
+            AND evaluation_id = %s
         """, (
             email,
             evaluation_id
@@ -104,7 +109,7 @@ def add_notification(c, email, message, work_id=None, evaluation_id=None):
             evaluation_id,
             created_at
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
     """, (
         email,
         message,
@@ -119,10 +124,9 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
 
-    # المستخدمين
     c.execute("""
     CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         email TEXT UNIQUE,
         password TEXT,
         name TEXT,
@@ -130,10 +134,9 @@ def init_db():
     )
     """)
 
-    # الأعمال
     c.execute("""
     CREATE TABLE IF NOT EXISTS works(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_email TEXT,
         year INTEGER,
         period TEXT,
@@ -142,29 +145,32 @@ def init_db():
         start_date TEXT,
         end_date TEXT,
         actual_days INTEGER,
-        target_days INTEGER
+        target_days INTEGER,
+        status TEXT DEFAULT 'pending',
+        admin_note TEXT,
+        approved_date TEXT
     )
     """)
 
-
-    # التقييمات
     c.execute("""
     CREATE TABLE IF NOT EXISTS evaluations(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_email TEXT,
         year INTEGER,
         period TEXT,
         quality INTEGER,
         teamwork INTEGER,
         continuity INTEGER,
-        extra_work INTEGER
+        extra_work INTEGER,
+        status TEXT DEFAULT 'pending',
+        admin_note TEXT,
+        approved_date TEXT
     )
     """)
 
-    # الأوزان
     c.execute("""
     CREATE TABLE IF NOT EXISTS weights(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         metric TEXT,
         year INTEGER,
         period TEXT,
@@ -172,14 +178,15 @@ def init_db():
     )
     """)
 
-
     c.execute("""
     CREATE TABLE IF NOT EXISTS notifications(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_email TEXT,
         message TEXT,
         is_read INTEGER DEFAULT 0,
-        created_at TEXT
+        created_at TEXT,
+        work_id INTEGER,
+        evaluation_id INTEGER
     )
     """)
 
@@ -276,18 +283,18 @@ def works():
             c.execute("""
                 UPDATE works
                 SET
-                    year = ?,
-                    period = ?,
-                    work_type = ?,
-                    work_details = ?,
-                    start_date = ?,
-                    end_date = ?,
-                    actual_days = ?,
-                    target_days = ?,
+                    year = %s,
+                    period = %s,
+                    work_type = %s,
+                    work_details = %s,
+                    start_date = %s,
+                    end_date = %s,
+                    actual_days = %s,
+                    target_days = %s,
                     status = 'pending',
                     admin_note = NULL
-                WHERE id = ?
-                AND user_email = ?
+                WHERE id = %s
+                AND user_email = %s
             """, (
                 year,
                 period,
@@ -322,7 +329,8 @@ def works():
                         target_days,
                         status
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
             """, (
                 session["email"],
                 year,
@@ -337,7 +345,7 @@ def works():
             ))
 
             print("INSERT DONE")
-            current_work_id = c.lastrowid
+            current_work_id = c.fetchone()["id"]
             action_message = f"📝 قام {session['name']} بإضافة عمل جديد"
 
         
@@ -381,7 +389,7 @@ def works():
         rows = c.execute("""
             SELECT *
             FROM works
-            WHERE user_email = ?
+            WHERE user_email = %s
             ORDER BY id DESC
         """, (
             session["email"],
@@ -391,7 +399,7 @@ def works():
     notifications = c.execute("""
         SELECT *
         FROM notifications
-        WHERE user_email = ?
+        WHERE user_email = %s
         ORDER BY id DESC
     """, (
         session["email"],
@@ -400,7 +408,7 @@ def works():
     unread_count = c.execute("""
     SELECT COUNT(*)
     FROM notifications
-    WHERE user_email = ?
+    WHERE user_email = %s
     AND is_read = 0
     """,(
         session["email"],
@@ -464,16 +472,16 @@ def evaluations():
             c.execute("""
                 UPDATE evaluations
                 SET
-                    year = ?,
-                    period = ?,
-                    quality = ?,
-                    teamwork = ?,
-                    continuity = ?,
-                    extra_work = ?,
+                    year = %s,
+                    period = %s,
+                    quality = %s,
+                    teamwork = %s,
+                    continuity = %s,
+                    extra_work = %s,
                     status = 'pending',
                     admin_note = NULL
-                WHERE id = ?
-                AND user_email = ?
+                WHERE id = %s
+                AND user_email = %s
             """, (
                 year,
                 period,
@@ -505,9 +513,9 @@ def evaluations():
             existing = c.execute("""
                 SELECT id
                 FROM evaluations
-                WHERE user_email = ?
-                AND year = ?
-                AND period = ?
+                WHERE user_email = %s
+                AND year = %s
+                AND period = %s
             """, (
                 session["email"],
                 year,
@@ -530,7 +538,8 @@ def evaluations():
                     extra_work,
                     status
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
             """, (
                 session["email"],
                 year,
@@ -542,7 +551,7 @@ def evaluations():
                 "pending"
             ))
 
-            new_evaluation_id = c.lastrowid
+            new_evaluation_id = c.fetchone()["id"]
 
             # إشعار للإدارة
             for email, info in ALLOWED_USERS.items():
@@ -575,15 +584,15 @@ def evaluations():
         params = []
 
         if selected_employee != "الكل":
-            query += " AND user_email = ?"
+            query += " AND user_email = %s"
             params.append(selected_employee)
 
         if selected_period != "الكل":
-            query += " AND period = ?"
+            query += " AND period = %s"
             params.append(selected_period)
 
         if selected_status != "الكل":
-            query += " AND status = ?"
+            query += " AND status = %s"
             params.append(selected_status)
 
         query += " ORDER BY id DESC"
@@ -595,7 +604,7 @@ def evaluations():
         rows = c.execute("""
             SELECT *
             FROM evaluations
-            WHERE user_email = ?
+            WHERE user_email = %s
             ORDER BY id DESC
         """, (
             session["email"],
@@ -608,7 +617,7 @@ def evaluations():
     notifications = c.execute("""
         SELECT *
         FROM notifications
-        WHERE user_email = ?
+        WHERE user_email = %s
         ORDER BY id DESC
     """, (
         session["email"],
@@ -617,7 +626,7 @@ def evaluations():
     unread_count = c.execute("""
         SELECT COUNT(*)
         FROM notifications
-        WHERE user_email = ?
+        WHERE user_email = %s
         AND is_read = 0
     """, (
         session["email"],
@@ -714,19 +723,19 @@ def admin():
     params = []
 
     if selected_employee != "الكل":
-        query += " AND user_email = ?"
+        query += " AND user_email = %s"
         params.append(selected_employee)
 
     if selected_period != "الكل":
-        query += " AND period = ?"
+        query += " AND period = %s"
         params.append(selected_period)
 
     if selected_status != "الكل":
-        query += " AND status = ?"
+        query += " AND status = %s"
         params.append(selected_status)
 
     if selected_work_type != "الكل":
-        query += " AND work_type = ?"
+        query += " AND work_type = %s"
         params.append(selected_work_type)
 
     query += " ORDER BY id DESC"
@@ -739,7 +748,7 @@ def admin():
     notifications = c.execute("""
         SELECT *
         FROM notifications
-        WHERE user_email = ?
+        WHERE user_email = %s
         ORDER BY id DESC
     """, (
         session["email"],
@@ -748,7 +757,7 @@ def admin():
     unread_count = c.execute("""
     SELECT COUNT(*)
     FROM notifications
-    WHERE user_email = ?
+    WHERE user_email = %s
     AND is_read = 0
     """, (
         session["email"],
@@ -833,7 +842,7 @@ def export_report():
             """
             SELECT *
             FROM works
-            WHERE user_email = ?
+            WHERE user_email = %s
             """,
             conn,
             params=[session["email"]]
@@ -843,7 +852,7 @@ def export_report():
             """
             SELECT *
             FROM evaluations
-            WHERE user_email = ?
+            WHERE user_email = %s
             """,
             conn,
             params=[session["email"]]
@@ -905,17 +914,19 @@ def check_db():
 
     result = []
 
-    result.append("WORKS COLUMNS:")
-    for col in c.execute("PRAGMA table_info(works)").fetchall():
-        result.append(col[1])
+    for table_name in ["works", "evaluations", "notifications"]:
+        result.append(f"<hr>{table_name.upper()} COLUMNS:")
 
-    result.append("<hr>EVALUATIONS COLUMNS:")
-    for col in c.execute("PRAGMA table_info(evaluations)").fetchall():
-        result.append(col[1])
+        c.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = %s
+            ORDER BY ordinal_position
+        """, (table_name,))
 
-    result.append("<hr>NOTIFICATIONS COLUMNS:")
-    for col in c.execute("PRAGMA table_info(notifications)").fetchall():
-        result.append(col[1])
+        for col in c.fetchall():
+            result.append(col["column_name"])
 
     conn.close()
     return "<br>".join(result)
@@ -997,9 +1008,9 @@ def results():
                 employee_count = c.execute("""
                     SELECT COUNT(*)
                     FROM works
-                    WHERE user_email = ?
-                    AND work_type = ?
-                    AND year = ?
+                    WHERE user_email = %s
+                    AND work_type = %s
+                    AND year = %s
                     AND status = 'approved'
                 """, (
                     email,
@@ -1010,8 +1021,8 @@ def results():
                 total_count = c.execute("""
                     SELECT COUNT(*)
                     FROM works
-                    WHERE work_type = ?
-                    AND year = ?
+                    WHERE work_type = %s
+                    AND year = %s
                     AND status = 'approved'
                 """, (
                     work_type,
@@ -1023,10 +1034,10 @@ def results():
                 employee_count = c.execute("""
                     SELECT COUNT(*)
                     FROM works
-                    WHERE user_email = ?
-                    AND work_type = ?
-                    AND year = ?
-                    AND period = ?
+                    WHERE user_email = %s
+                    AND work_type = %s
+                    AND year = %s
+                    AND period = %s
                     AND status = 'approved'                      
                 """, (
                     email,
@@ -1038,9 +1049,9 @@ def results():
                 total_count = c.execute("""
                     SELECT COUNT(*)
                     FROM works
-                    WHERE work_type = ?
-                    AND year = ?
-                    AND period = ?
+                    WHERE work_type = %s
+                    AND year = %s
+                    AND period = %s
                     AND status = 'approved'
                 """, (
                     work_type,
@@ -1053,7 +1064,7 @@ def results():
                 weight_row = c.execute("""
                     SELECT weight
                     FROM weights
-                    WHERE metric = ?
+                    WHERE metric = %s
                 """, (metric,)).fetchone()
 
                 if weight_row:
@@ -1081,9 +1092,9 @@ def results():
                         AVG(target_days) AS avg_target,
                         AVG(actual_days) AS avg_actual
                     FROM works
-                    WHERE user_email = ?
-                    AND work_type = ?
-                    AND year = ?
+                    WHERE user_email = %s
+                    AND work_type = %s
+                    AND year = %s
                 """, (
                     email,
                     work_type,
@@ -1097,10 +1108,10 @@ def results():
                         AVG(target_days) AS avg_target,
                         AVG(actual_days) AS avg_actual
                     FROM works
-                    WHERE user_email = ?
-                    AND work_type = ?
-                    AND year = ?
-                    AND period = ?
+                    WHERE user_email = %s
+                    AND work_type = %s
+                    AND year = %s
+                    AND period = %s
                 """, (
                     email,
                     work_type,
@@ -1117,7 +1128,7 @@ def results():
                 weight_row = c.execute("""
                     SELECT weight
                     FROM weights
-                    WHERE metric = ?
+                    WHERE metric = %s
                 """, (metric,)).fetchone()
 
                 if weight_row:
@@ -1140,8 +1151,8 @@ def results():
                     AVG(continuity) AS continuity,
                     AVG(extra_work) AS extra_work
                 FROM evaluations
-                WHERE user_email = ?
-                AND year = ?
+                WHERE user_email = %s
+                AND year = %s
                 AND status = 'approved'
             """, (
                 email,
@@ -1157,9 +1168,9 @@ def results():
                     AVG(continuity) AS continuity,
                     AVG(extra_work) AS extra_work
                 FROM evaluations
-                WHERE user_email = ?
-                AND year = ?
-                AND period = ?
+                WHERE user_email = %s
+                AND year = %s
+                AND period = %s
                 AND status = 'approved'
             """, (
                 email,
@@ -1183,7 +1194,7 @@ def results():
                 weight_row = c.execute("""
                     SELECT weight
                     FROM weights
-                    WHERE metric = ?
+                    WHERE metric = %s
                 """, (metric,)).fetchone()
 
                 if weight_row:
@@ -1283,9 +1294,9 @@ def employee_details_data():
             works = c.execute("""
                 SELECT work_details
                 FROM works
-                WHERE user_email = ?
-                AND work_type = ?
-                AND year = ?
+                WHERE user_email = %s
+                AND work_type = %s
+                AND year = %s
                 AND status = 'approved'
             """, (
                 email,
@@ -1298,10 +1309,10 @@ def employee_details_data():
             works = c.execute("""
                 SELECT work_details
                 FROM works
-                WHERE user_email = ?
-                AND work_type = ?
-                AND year = ?
-                AND period = ?
+                WHERE user_email = %s
+                AND work_type = %s
+                AND year = %s
+                AND period = %s
                 AND status = 'approved'
             """, (
                 email,
@@ -1317,8 +1328,8 @@ def employee_details_data():
             total_count = c.execute("""
                 SELECT COUNT(*)
                 FROM works
-                WHERE work_type = ?
-                AND year = ?
+                WHERE work_type = %s
+                AND year = %s
                 AND status = 'approved'
             """, (
                 work_type,
@@ -1330,9 +1341,9 @@ def employee_details_data():
             total_count = c.execute("""
                 SELECT COUNT(*)
                 FROM works
-                WHERE work_type = ?
-                AND year = ?
-                AND period = ?
+                WHERE work_type = %s
+                AND year = %s
+                AND period = %s
                 AND status = 'approved'
             """, (
                 work_type,
@@ -1343,7 +1354,7 @@ def employee_details_data():
         weight_row = c.execute("""
         SELECT weight
         FROM weights
-        WHERE metric = ?
+        WHERE metric = %s
         """, (
             metric,
         )).fetchone()
@@ -1415,9 +1426,9 @@ def employee_details_data():
                     AVG(target_days) AS avg_target,
                     AVG(actual_days) AS avg_actual
                 FROM works
-                WHERE user_email = ?
-                AND work_type = ?
-                AND year = ?
+                WHERE user_email = %s
+                AND work_type = %s
+                AND year = %s
             """, (
                 email,
                 work_type,
@@ -1431,10 +1442,10 @@ def employee_details_data():
                     AVG(target_days) AS avg_target,
                     AVG(actual_days) AS avg_actual
                 FROM works
-                WHERE user_email = ?
-                AND work_type = ?
-                AND year = ?
-                AND period = ?
+                WHERE user_email = %s
+                AND work_type = %s
+                AND year = %s
+                AND period = %s
             """, (
                 email,
                 work_type,
@@ -1453,7 +1464,7 @@ def employee_details_data():
             weight_row = c.execute("""
                 SELECT weight
                 FROM weights
-                WHERE metric = ?
+                WHERE metric = %s
             """, (
                 metric,
             )).fetchone()
@@ -1521,8 +1532,8 @@ def employee_details_data():
                 AVG(continuity) AS continuity,
                 AVG(extra_work) AS extra_work
             FROM evaluations
-            WHERE user_email = ?
-            AND year = ?
+            WHERE user_email = %s
+            AND year = %s
             AND status = 'approved'
         """, (
             email,
@@ -1538,9 +1549,9 @@ def employee_details_data():
                 AVG(continuity) AS continuity,
                 AVG(extra_work) AS extra_work
             FROM evaluations
-            WHERE user_email = ?
-            AND year = ?
-            AND period = ?
+            WHERE user_email = %s
+            AND year = %s
+            AND period = %s
             AND status = 'approved'
         """, (
             email,
@@ -1564,7 +1575,7 @@ def employee_details_data():
         weight_row = c.execute("""
             SELECT weight
             FROM weights
-            WHERE metric = ?
+            WHERE metric = %s
         """, (
             metric,
         )).fetchone()
@@ -1652,7 +1663,7 @@ def delete_work(work_id):
 
     c.execute("""
         DELETE FROM notifications
-        WHERE work_id = ?
+        WHERE work_id = %s
     """, (work_id,))
 
     if session["role"] == "admin":
@@ -1660,15 +1671,15 @@ def delete_work(work_id):
 
         c.execute("""
             DELETE FROM works
-            WHERE id = ?
+            WHERE id = %s
         """, (work_id,))
 
     else:
 
         c.execute("""
             DELETE FROM works
-            WHERE id = ?
-            AND user_email = ?
+            WHERE id = %s
+            AND user_email = %s
         """, (
             work_id,
             session["email"]
@@ -1697,7 +1708,7 @@ def edit_work(work_id):
         work = c.execute("""
         SELECT *
         FROM works
-        WHERE id = ?
+        WHERE id = %s
         """, (work_id,)).fetchone()
 
     else:
@@ -1705,8 +1716,8 @@ def edit_work(work_id):
         work = c.execute("""
         SELECT *
         FROM works
-        WHERE id = ?
-        AND user_email = ?
+        WHERE id = %s
+        AND user_email = %s
         """, (
             work_id,
             session["email"]
@@ -1720,8 +1731,8 @@ def edit_work(work_id):
 
         c.execute("""
             UPDATE works
-            SET work_details = ?
-            WHERE id = ?
+            SET work_details = %s
+            WHERE id = %s
         """, (
             request.form["work_details"],
             work_id
@@ -1749,14 +1760,14 @@ def delete_evaluation(evaluation_id):
 
     c.execute("""
         DELETE FROM notifications
-        WHERE evaluation_id = ?
+        WHERE evaluation_id = %s
     """, (
         evaluation_id,
     ))
     c.execute("""
         DELETE FROM evaluations
-        WHERE id = ?
-        AND user_email = ?
+        WHERE id = %s
+        AND user_email = %s
     """, (
         evaluation_id,
         session["email"]
@@ -1779,13 +1790,13 @@ def delete_evaluation_admin(evaluation_id):
     c = conn.cursor()
     c.execute("""
         DELETE FROM notifications
-        WHERE evaluation_id = ?
+        WHERE evaluation_id = %s
     """, (
         evaluation_id,
     ))
     c.execute("""
         DELETE FROM evaluations
-        WHERE id = ?
+        WHERE id = %s
     """, (evaluation_id,))
 
     conn.commit()
@@ -1830,8 +1841,8 @@ def edit_work_admin():
 
     c.execute("""
         UPDATE works
-        SET work_details = ?
-        WHERE id = ?
+        SET work_details = %s
+        WHERE id = %s
     """, (
         work_details,
         work_id
@@ -1849,13 +1860,18 @@ def test():
     conn = get_db()
     c = conn.cursor()
 
-    rows = c.execute("""
-    PRAGMA table_info(works)
-    """).fetchall()
+    c.execute("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'works'
+        ORDER BY ordinal_position
+    """)
 
-    return "<br>".join([r[1] for r in rows])
+    rows = c.fetchall()
+    conn.close()
 
-
+    return "<br>".join([r["column_name"] for r in rows])
 
 
 @app.route("/check-status")
@@ -1893,16 +1909,16 @@ def approve_work(work_id):
     row = c.execute("""
     SELECT user_email, work_type
     FROM works
-    WHERE id = ?
+    WHERE id = %s
     """, (work_id,)).fetchone()
 
     c.execute("""
         UPDATE works
         SET
             status = 'approved',
-            approved_date = ?,
+            approved_date = %s,
             admin_note = NULL
-        WHERE id = ?
+        WHERE id = %s
     """, (
         datetime.now().strftime("%Y-%m-%d"),
         work_id
@@ -1940,15 +1956,15 @@ def return_work():
     row = c.execute("""
     SELECT user_email, work_type
     FROM works
-    WHERE id = ?
+    WHERE id = %s
     """, (work_id,)).fetchone()
 
     c.execute("""
         UPDATE works
         SET
             status = 'returned',
-            admin_note = ?
-        WHERE id = ?
+            admin_note = %s
+        WHERE id = %s
     """, (
         admin_note,
         work_id
@@ -1984,7 +2000,7 @@ def bulk_approve():
         c.execute("""
             UPDATE works
             SET status='approved'
-            WHERE id=?
+            WHERE id=%s
         """, (work_id,))
 
     conn.commit()
@@ -2008,7 +2024,7 @@ def bulk_unapprove():
         row = c.execute("""
             SELECT user_email, work_type
             FROM works
-            WHERE id = ?
+            WHERE id = %s
         """, (work_id,)).fetchone()
 
         c.execute("""
@@ -2016,7 +2032,7 @@ def bulk_unapprove():
             SET
                 status = 'pending',
                 approved_date = NULL
-            WHERE id = ?
+            WHERE id = %s
         """, (work_id,))
 
         add_notification(
@@ -2043,16 +2059,16 @@ def approve_evaluation(evaluation_id):
     row = c.execute("""
     SELECT user_email, period
     FROM evaluations
-    WHERE id = ?
+    WHERE id = %s
     """, (evaluation_id,)).fetchone()
 
     c.execute("""
         UPDATE evaluations
         SET
             status='approved',
-            approved_date=?,
+            approved_date=%s,
             admin_note=NULL
-        WHERE id=?
+        WHERE id=%s
     """, (
         datetime.now().strftime("%Y-%m-%d"),
         evaluation_id
@@ -2088,15 +2104,15 @@ def return_evaluation():
     row = c.execute("""
     SELECT user_email, period
     FROM evaluations
-    WHERE id = ?
+    WHERE id = %s
     """, (evaluation_id,)).fetchone()
 
     c.execute("""
         UPDATE evaluations
         SET
             status='returned',
-            admin_note=?
-        WHERE id=?
+            admin_note=%s
+        WHERE id=%s
     """, (
         admin_note,
         evaluation_id
@@ -2124,7 +2140,7 @@ def test_work(work_id):
     row = c.execute("""
         SELECT *
         FROM works
-        WHERE id = ?
+        WHERE id = %s
     """, (work_id,)).fetchone()
 
     conn.close()
@@ -2144,7 +2160,7 @@ def check_work(work_id):
     row = c.execute("""
         SELECT id,status,admin_note
         FROM works
-        WHERE id=?
+        WHERE id=%s
     """, (work_id,)).fetchone()
 
     conn.close()
@@ -2177,7 +2193,7 @@ def bulk_approve_evaluations():
         c.execute("""
             UPDATE evaluations
             SET status='approved'
-            WHERE id=?
+            WHERE id=%s
         """, (
             evaluation_id,
         ))
@@ -2210,7 +2226,7 @@ def mark_notifications_read():
     c.execute("""
         UPDATE notifications
         SET is_read = 1
-        WHERE user_email = ?
+        WHERE user_email = %s
     """, (
         session["email"],
     ))
@@ -2260,7 +2276,7 @@ def clear_notifications():
 
     c.execute("""
         DELETE FROM notifications
-        WHERE user_email = ?
+        WHERE user_email = %s
     """, (
         session["email"],
     ))
@@ -2282,8 +2298,8 @@ def delete_notification(notification_id):
 
     c.execute("""
         DELETE FROM notifications
-        WHERE id = ?
-        AND user_email = ?
+        WHERE id = %s
+        AND user_email = %s
     """, (
         notification_id,
         session["email"]
@@ -2301,11 +2317,18 @@ def check_notification_columns():
     conn = get_db()
     c = conn.cursor()
 
-    rows = c.execute("""
-    PRAGMA table_info(notifications)
-    """).fetchall()
+    c.execute("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'notifications'
+        ORDER BY ordinal_position
+    """)
 
-    return "<br>".join([r[1] for r in rows])
+    rows = c.fetchall()
+    conn.close()
+
+    return "<br>".join([r["column_name"] for r in rows])
 
 
 
