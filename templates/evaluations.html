@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
 <meta charset="UTF-8">
-<title>Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª</title>
+<title>التقييمات</title>
 <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
 </head>
 
@@ -18,7 +18,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <h2 class="mb-0">
-        Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©
+        لوحة الإدارة
     </h2>
 
     <div>
@@ -28,7 +28,7 @@
         data-bs-toggle="collapse"
         data-bs-target="#notificationsBox">
 
-        ðŸ””
+        🔔
 
         {% if unread_count > 0 %}
         <span
@@ -40,17 +40,17 @@
     </button>
 
         <a href="/admin" class="btn btn-outline-primary">
-            Ø§Ù„Ø£Ø¹Ù…Ø§Ù„
+            الأعمال
         </a>
 
         <a href="/export-report" class="btn btn-success">
-            ðŸ“¥ ØªÙ†Ø²ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
+            📥 تنزيل البيانات
         </a>
         <a href="/results" class="btn btn-dark">
-            Ø§Ù„Ù†ØªØ§Ø¦Ø¬
+            النتائج
         </a>
         <a href="/logout" class="btn btn-danger">
-            ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬
+            تسجيل الخروج
         </a>
 
     </div>
@@ -64,13 +64,13 @@
 
         <div class="card-header d-flex justify-content-between">
 
-            <span>Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª</span>
+            <span>الإشعارات</span>
 
             <a
                 href="/clear-notifications"
                 class="btn btn-sm btn-danger"
-                onclick="return confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§ØªØŸ')">
-                Ù…Ø³Ø­ Ø§Ù„ÙƒÙ„
+                onclick="return confirm('هل تريد حذف جميع الإشعارات؟')">
+                مسح الكل
             </a>
 
         </div>
@@ -104,8 +104,8 @@ class="text-decoration-none flex-grow-1">
                     <a
                         href="/delete-notification/{{ n['id'] }}"
                         class="btn btn-sm btn-outline-danger"
-                        onclick="return confirm('Ø­Ø°Ù Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±ØŸ')">
-                        âœ•
+                        onclick="return confirm('حذف الإشعار؟')">
+                        ✕
                     </a>
 
                 </div>
@@ -115,7 +115,7 @@ class="text-decoration-none flex-grow-1">
             {% else %}
 
                 <div class="text-muted">
-                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø´Ø¹Ø§Ø±Ø§Øª
+                    لا توجد إشعارات
                 </div>
 
             {% endif %}
@@ -131,14 +131,14 @@ class="text-decoration-none flex-grow-1">
 
     <div class="col-md-3">
 
-        <label class="form-label">Ø§Ù„Ù…ÙˆØ¸Ù</label>
+        <label class="form-label">الموظف</label>
 
         <select
         class="form-select"
         name="employee"
         onchange="this.form.submit()">
 
-            <option value="Ø§Ù„ÙƒÙ„">Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†</option>
+            <option value="الكل">جميع الموظفين</option>
 
             {% for email, name in employees.items() %}
 
@@ -159,34 +159,34 @@ class="text-decoration-none flex-grow-1">
 
     <div class="col-md-3">
 
-        <label class="form-label">Ø§Ù„ÙØªØ±Ø©</label>
+        <label class="form-label">الفترة</label>
 
         <select
         class="form-select"
         name="period"
         onchange="this.form.submit()">
 
-            <option value="Ø§Ù„ÙƒÙ„"
-            {% if selected_period == "Ø§Ù„ÙƒÙ„" %}
+            <option value="الكل"
+            {% if selected_period == "الكل" %}
             selected
             {% endif %}
             >
-            ÙƒÙ„ Ø§Ù„ÙØªØ±Ø§Øª
+            كل الفترات
             </option>
-            <option value="Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„"
-            {% if selected_period == "Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„" %}
+            <option value="النصف الأول"
+            {% if selected_period == "النصف الأول" %}
             selected
             {% endif %}
             >
-            Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„
+            النصف الأول
             </option>
 
-            <option value="Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ"
-            {% if selected_period == "Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ" %}
+            <option value="النصف الثاني"
+            {% if selected_period == "النصف الثاني" %}
             selected
             {% endif %}
             >
-            Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ
+            النصف الثاني
             </option>
 
         </select>
@@ -195,7 +195,7 @@ class="text-decoration-none flex-grow-1">
     <div class="col-md-3">
 
 <label class="form-label">
-Ø§Ù„Ø­Ø§Ù„Ø©
+الحالة
 </label>
 
 <select
@@ -203,32 +203,32 @@ class="form-select"
 name="status"
 onchange="this.form.submit()">
 
-<option value="Ø§Ù„ÙƒÙ„"
-{% if selected_status=="Ø§Ù„ÙƒÙ„" %}
+<option value="الكل"
+{% if selected_status=="الكل" %}
 selected
 {% endif %}>
-ÙƒÙ„ Ø§Ù„Ø­Ø§Ù„Ø§Øª
+كل الحالات
 </option>
 
 <option value="pending"
 {% if selected_status=="pending" %}
 selected
 {% endif %}>
-Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯
+بانتظار الاعتماد
 </option>
 
 <option value="approved"
 {% if selected_status=="approved" %}
 selected
 {% endif %}>
-Ù…Ø¹ØªÙ…Ø¯
+معتمد
 </option>
 
 <option value="returned"
 {% if selected_status=="returned" %}
 selected
 {% endif %}>
-Ù…Ø±Ø¬Ø¹
+مرجع
 </option>
 
 </select>
@@ -243,7 +243,7 @@ selected
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <h2>
-        Ù…Ø±Ø­Ø¨Ø§Ù‹ {{ name }} ðŸ‘‹
+        مرحباً {{ name }} 👋
     </h2>
 
 <div class="d-flex gap-2 align-items-center">
@@ -254,7 +254,7 @@ selected
         data-bs-toggle="collapse"
         data-bs-target="#notificationsBox">
 
-        ðŸ””
+        🔔
 
         {% if unread_count > 0 %}
         <span
@@ -266,15 +266,15 @@ selected
     </button>
 
         <a href="/works" class="btn btn-primary">
-            Ø§Ù„Ø£Ø¹Ù…Ø§Ù„
+            الأعمال
         </a>
 
         <a href="/export-report" class="btn btn-success">
-            ðŸ“¥ ØªÙ†Ø²ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§ØªÙŠ
+            📥 تنزيل بياناتي
         </a>
 
         <a href="/logout" class="btn btn-danger">
-            ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬
+            تسجيل الخروج
         </a>
 
     </div>
@@ -288,13 +288,13 @@ selected
 
         <div class="card-header d-flex justify-content-between">
 
-            <span>Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª</span>
+            <span>الإشعارات</span>
 
             <a
                 href="/clear-notifications"
                 class="btn btn-sm btn-danger"
-                onclick="return confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§ØªØŸ')">
-                Ù…Ø³Ø­ Ø§Ù„ÙƒÙ„
+                onclick="return confirm('هل تريد حذف جميع الإشعارات؟')">
+                مسح الكل
             </a>
 
         </div>
@@ -328,8 +328,8 @@ selected
                     <a
                     href="/delete-notification/{{ n['id'] }}"
                     class="btn btn-sm btn-outline-danger"
-                    onclick="return confirm('Ø­Ø°Ù Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±ØŸ')">
-                        âœ•
+                    onclick="return confirm('حذف الإشعار؟')">
+                        ✕
                     </a>
 
                 </div>
@@ -339,7 +339,7 @@ selected
             {% else %}
 
                 <div class="text-muted">
-                    Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø´Ø¹Ø§Ø±Ø§Øª
+                    لا توجد إشعارات
                 </div>
 
             {% endif %}
@@ -356,22 +356,22 @@ name="evaluation_id"
 id="evaluation_id"
 >
 <div class="mb-3">
-<label>Ø§Ù„Ø³Ù†Ø©</label>
+<label>السنة</label>
 <select name="year" class="form-select">
 <option>2026</option>
 </select>
 </div>
 
 <div class="mb-3">
-<label>Ø§Ù„ÙØªØ±Ø©</label>
+<label>الفترة</label>
 <select name="period" class="form-select">
-<option>Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„</option>
-<option>Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ</option>
+<option>النصف الأول</option>
+<option>النصف الثاني</option>
 </select>
 </div>
 
 <div class="mb-3">
-<label>Ø¬ÙˆØ¯Ø© Ø§Ù„Ø£Ø¹Ù…Ø§Ù„</label>
+<label>جودة الأعمال</label>
 <select name="quality" class="form-select">
 <option>1</option>
 <option>2</option>
@@ -382,7 +382,7 @@ id="evaluation_id"
 </div>
 
 <div class="mb-3">
-<label>Ø±ÙˆØ­ Ø§Ù„ÙØ±ÙŠÙ‚</label>
+<label>روح الفريق</label>
 <select name="teamwork" class="form-select">
 <option>1</option>
 <option>2</option>
@@ -393,7 +393,7 @@ id="evaluation_id"
 </div>
 
 <div class="mb-3">
-<label>Ø§Ù„Ø§Ø³ØªÙ…Ø±Ø§Ø±ÙŠØ©</label>
+<label>الاستمرارية</label>
 <select name="continuity" class="form-select">
 <option>1</option>
 <option>2</option>
@@ -404,7 +404,7 @@ id="evaluation_id"
 </div>
 
 <div class="mb-3">
-<label>ØªÙ‚Ø¨Ù„ Ø§Ù„Ø¥Ø¶Ø§ÙÙŠ</label>
+<label>تقبل الإضافي</label>
 <select name="extra_work" class="form-select">
 <option>1</option>
 <option>2</option>
@@ -419,7 +419,7 @@ type="submit"
 id="saveBtn"
 class="btn btn-success"
 >
-Ø­ÙØ¸
+حفظ
 </button>
 </form>
 
@@ -434,7 +434,7 @@ class="btn btn-success"
     <div class="col-md-3">
         <div class="card text-center border-warning shadow-sm">
             <div class="card-body">
-                <h6>Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯</h6>
+                <h6>بانتظار الاعتماد</h6>
                 <h2 class="text-warning">{{ pending_count }}</h2>
             </div>
         </div>
@@ -443,7 +443,7 @@ class="btn btn-success"
     <div class="col-md-3">
         <div class="card text-center border-success shadow-sm">
             <div class="card-body">
-                <h6>Ù…Ø¹ØªÙ…Ø¯</h6>
+                <h6>معتمد</h6>
                 <h2 class="text-success">{{ approved_count }}</h2>
             </div>
         </div>
@@ -452,7 +452,7 @@ class="btn btn-success"
     <div class="col-md-3">
         <div class="card text-center border-danger shadow-sm">
             <div class="card-body">
-                <h6>Ù…Ø±Ø¬Ø¹</h6>
+                <h6>مرجع</h6>
                 <h2 class="text-danger">{{ returned_count }}</h2>
             </div>
         </div>
@@ -461,7 +461,7 @@ class="btn btn-success"
     <div class="col-md-3">
         <div class="card text-center border-primary shadow-sm">
             <div class="card-body">
-                <h6>Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ</h6>
+                <h6>الإجمالي</h6>
                 <h2 class="text-primary">{{ total_count }}</h2>
             </div>
         </div>
@@ -470,7 +470,7 @@ class="btn btn-success"
 </div>
 {% endif %}
 <h4>
-Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª
+التقييمات
 </h4>
 
 <form method="POST" action="/bulk-approve-evaluations">
@@ -480,7 +480,7 @@ class="btn btn-success"
 <button
 type="submit"
 class="btn btn-success mb-3">
-âœ… Ø§Ø¹ØªÙ…Ø§Ø¯ Ø§Ù„Ù…Ø­Ø¯Ø¯
+✅ اعتماد المحدد
 </button>
 
 {% endif %}
@@ -494,16 +494,16 @@ class="btn btn-success mb-3">
 </th>
 {% endif %}
     <th>#</th>
-    <th>Ø§Ù„Ù…ÙˆØ¸Ù</th>
-    <th>Ø§Ù„Ø³Ù†Ø©</th>
-    <th>Ø§Ù„ÙØªØ±Ø©</th>
-    <th>Ø¬ÙˆØ¯Ø© Ø§Ù„Ø£Ø¹Ù…Ø§Ù„</th>
-    <th>Ø±ÙˆØ­ Ø§Ù„ÙØ±ÙŠÙ‚</th>
-    <th>Ø§Ù„Ø§Ø³ØªÙ…Ø±Ø§Ø±ÙŠØ©</th>
-    <th>ØªÙ‚Ø¨Ù„ Ø§Ù„Ø¥Ø¶Ø§ÙÙŠ</th>
-    <th>Ø§Ù„Ø­Ø§Ù„Ø©</th>
-    <th>Ù…Ù„Ø§Ø­Ø¸Ø© Ø§Ù„Ù…Ø¯ÙŠØ±</th>
-    <th>Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª</th>
+    <th>الموظف</th>
+    <th>السنة</th>
+    <th>الفترة</th>
+    <th>جودة الأعمال</th>
+    <th>روح الفريق</th>
+    <th>الاستمرارية</th>
+    <th>تقبل الإضافي</th>
+    <th>الحالة</th>
+    <th>ملاحظة المدير</th>
+    <th>إجراءات</th>
 </tr>
 </thead>
 
@@ -540,13 +540,13 @@ class="btn btn-success mb-3">
     <td>
 
     {% if row["status"] == "approved" %}
-        <span class="badge bg-success">Ù…Ø¹ØªÙ…Ø¯</span>
+        <span class="badge bg-success">معتمد</span>
 
     {% elif row["status"] == "returned" %}
-        <span class="badge bg-warning text-dark">Ù…Ø±Ø¬Ø¹</span>
+        <span class="badge bg-warning text-dark">مرجع</span>
 
     {% else %}
-        <span class="badge bg-secondary">Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯</span>
+        <span class="badge bg-secondary">بانتظار الاعتماد</span>
 
     {% endif %}
 
@@ -561,7 +561,7 @@ class="btn btn-success mb-3">
     <a
     href="/approve-evaluation/{{ row['id'] }}"
     class="btn btn-success btn-sm">
-        Ø§Ø¹ØªÙ…Ø§Ø¯
+        اعتماد
     </a>
 
     {% endif %}
@@ -572,14 +572,14 @@ class="btn btn-success mb-3">
     data-bs-toggle="modal"
     data-bs-target="#returnModal"
     onclick="fillReturnEvaluation('{{ row['id'] }}')">
-    Ø¥Ø±Ø¬Ø§Ø¹
+    إرجاع
     </button>
 
     <a
     href="/delete-evaluation-admin/{{ row['id'] }}"
     class="btn btn-danger btn-sm"
-    onclick="return confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ø§Ù„ØªÙ‚ÙŠÙŠÙ…ØŸ')">
-    Ø­Ø°Ù
+    onclick="return confirm('هل تريد حذف التقييم؟')">
+    حذف
     </a>
 {% else %}
 
@@ -595,13 +595,13 @@ class="btn btn-success mb-3">
     '{{ row["continuity"] }}',
     '{{ row["extra_work"] }}'
     )">
-        ØªØ¹Ø¯ÙŠÙ„
+        تعديل
     </button>
     <a
     href="/delete-evaluation/{{ row['id'] }}"
     class="btn btn-danger btn-sm"
-    onclick="return confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ø§Ù„ØªÙ‚ÙŠÙŠÙ…ØŸ')">
-    Ø­Ø°Ù
+    onclick="return confirm('هل تريد حذف التقييم؟')">
+    حذف
     </a>
 
 {% endif %}
@@ -641,7 +641,7 @@ document.querySelector('select[name="continuity"]').value = continuity;
 document.querySelector('select[name="extra_work"]').value = extraWork;
 
 document.getElementById("evaluation_id").value = id;
-document.getElementById("saveBtn").innerText = "ØªØ­Ø¯ÙŠØ«";
+document.getElementById("saveBtn").innerText = "تحديث";
 
 window.scrollTo({
 top:0,
@@ -689,7 +689,7 @@ function fillReturnEvaluation(id){
             <form method="POST" action="/return-evaluation">
 
                 <div class="modal-header">
-                    <h5>Ø¥Ø±Ø¬Ø§Ø¹ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…</h5>
+                    <h5>إرجاع التقييم</h5>
                 </div>
 
                 <div class="modal-body">
@@ -700,7 +700,7 @@ function fillReturnEvaluation(id){
                     id="return_evaluation_id">
 
                     <label>
-                        Ù…Ù„Ø§Ø­Ø¸Ø© Ø§Ù„Ù…Ø¯ÙŠØ±
+                        ملاحظة المدير
                     </label>
 
                     <textarea
@@ -716,7 +716,7 @@ function fillReturnEvaluation(id){
                     <button
                     type="submit"
                     class="btn btn-warning">
-                    Ø¥Ø±Ø¬Ø§Ø¹
+                    إرجاع
                     </button>
 
                 </div>

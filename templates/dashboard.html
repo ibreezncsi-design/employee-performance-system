@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
 <meta charset="UTF-8">
-<title>Ù„ÙˆØ­Ø© Ø§Ù„Ù†ØªØ§Ø¦Ø¬</title>
+<title>لوحة النتائج</title>
 
 <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
 
@@ -26,29 +26,29 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <h1>
-        Ù„ÙˆØ­Ø© Ø§Ù„Ø£Ø¯Ø§Ø¡
+        لوحة الأداء
     </h1>
 
     <div>
 
         <a href="/admin" class="btn btn-outline-primary">
-            Ø§Ù„Ø£Ø¹Ù…Ø§Ù„
+            الأعمال
         </a>
 
         <a href="/evaluations" class="btn btn-outline-primary">
-            Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª
+            التقييمات
         </a>
 
         <a href="/export-report" class="btn btn-success">
-            ðŸ“¥ ØªÙ†Ø²ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
+            📥 تنزيل البيانات
         </a>
 
         <a href="/results" class="btn btn-dark">
-            Ø§Ù„Ù†ØªØ§Ø¦Ø¬
+            النتائج
         </a>
 
         <a href="/logout" class="btn btn-danger">
-            ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬
+            تسجيل الخروج
         </a>
 
     </div>
@@ -63,7 +63,7 @@
 <div class="col-md-3">
 
 <label class="form-label">
-Ø§Ù„Ø³Ù†Ø©
+السنة
 </label>
 
 <select
@@ -87,7 +87,7 @@ selected
 <div class="col-md-3">
 
 <label class="form-label">
-Ø§Ù„ÙØªØ±Ø©
+الفترة
 </label>
 
 <select
@@ -96,28 +96,28 @@ selected
     onchange="this.form.submit()"
 >
 
-<option value="Ø§Ù„ÙƒÙ„"
-{% if selected_period == "Ø§Ù„ÙƒÙ„" %}
+<option value="الكل"
+{% if selected_period == "الكل" %}
 selected
 {% endif %}
 >
-Ø§Ù„ÙƒÙ„
+الكل
 </option>
 
-<option value="Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„"
-{% if selected_period == "Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„" %}
+<option value="النصف الأول"
+{% if selected_period == "النصف الأول" %}
 selected
 {% endif %}
 >
-Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„
+النصف الأول
 </option>
 
-<option value="Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ"
-{% if selected_period == "Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ" %}
+<option value="النصف الثاني"
+{% if selected_period == "النصف الثاني" %}
 selected
 {% endif %}
 >
-Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ
+النصف الثاني
 </option>
 
 </select>
@@ -126,68 +126,68 @@ selected
 <div class="col-md-3">
 
 <label class="form-label">
-Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†
+الموظفين
 </label>
 <select
     name="employee"
     class="form-select"
     onchange="this.form.submit()"
 >
-    <option value="Ø§Ù„ÙƒÙ„"
-{% if selected_employee == "Ø§Ù„ÙƒÙ„" %}
+    <option value="الكل"
+{% if selected_employee == "الكل" %}
 selected
 {% endif %}
 >
-ÙƒÙ„ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†
+كل الموظفين
 </option>
 <option value="Huda@ncsi.gov.om"
 {% if selected_employee == "Huda@ncsi.gov.om" %}
 selected
 {% endif %}
 >
-Ù‡Ø¯Ù‰
+هدى
 </option>
 <option value="aismaili@ncsi.gov.om"
 {% if selected_employee == "aismaili@ncsi.gov.om" %}
 selected
 {% endif %}
 >
-Ø£Ø­Ù„Ø§Ù…
+أحلام
 </option>
 <option value="hbuloshi@ncsi.gov.om"
 {% if selected_employee == "hbuloshi@ncsi.gov.om" %}
 selected
 {% endif %}
 >
-Ù‡ÙˆØ¯
+هود
 </option>
 <option value="Aisha.Rashid@ncsi.gov.om"
 {% if selected_employee == "Aisha.Rashid@ncsi.gov.om" %}
 selected
 {% endif %}
 >
-Ø¹Ø§ÙŠØ´Ø©
+عايشة
 </option>
 <option value="almuhannad@ncsi.gov.om"
 {% if selected_employee == "almuhannad@ncsi.gov.om" %}
 selected
 {% endif %}
 >
-Ø§Ù„Ù…Ù‡Ù†Ø¯
+المهند
 </option>
 <option value="B.Ghassani@ncsi.gov.om"
 {% if selected_employee == "B.Ghassani@ncsi.gov.om" %}
 selected
 {% endif %}
 >
-Ø¨Ù„Ù‚ÙŠØ³
+بلقيس
 </option>
 <option value="fbuloshi@ncsi.gov.om"
 {% if selected_employee == "fbuloshi@ncsi.gov.om" %}
 selected
 {% endif %}
 >
-ÙØ§Ø·Ù…Ø©
+فاطمة
 </option>
 
 </select>
@@ -200,14 +200,14 @@ selected
 
 <div class="col-md-3">
 <div class="card card-stat p-3 text-center">
-<h5>Ø¹Ø¯Ø¯ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†</h5>
+<h5>عدد الموظفين</h5>
 <h2>{{ results|length }}</h2>
 </div>
 </div>
 
 <div class="col-md-3">
 <div class="card card-stat p-3 text-center">
-<h5>Ø§Ù„Ø£ÙˆÙ„</h5>
+<h5>الأول</h5>
 <h2>
 {{ results[0]["name"] if results else "-" }}
 </h2>
@@ -216,7 +216,7 @@ selected
 
 <div class="col-md-3">
 <div class="card card-stat p-3 text-center">
-<h5>Ø£Ø¹Ù„Ù‰ Ù†ØªÙŠØ¬Ø©</h5>
+<h5>أعلى نتيجة</h5>
 <h2>
 {{ results[0]["score"] if results else 0 }}%
 </h2>
@@ -225,7 +225,7 @@ selected
 
 <div class="col-md-3">
 <div class="card card-stat p-3 text-center">
-<h5>Ø§Ù„Ø³Ù†Ø©</h5>
+<h5>السنة</h5>
 <h2>{{ selected_year }}</h2>
 </div>
 </div>
@@ -235,7 +235,7 @@ selected
 <div class="card p-4">
 
 <h4 class="mb-3">
-ðŸ† ØªØ±ØªÙŠØ¨ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†
+🏆 ترتيب الموظفين
 </h4>
 
 <table class="table table-bordered">
@@ -243,10 +243,10 @@ selected
 <thead>
 
 <tr>
-<th>Ø§Ù„ØªØ±ØªÙŠØ¨</th>
-<th>Ø§Ù„Ù…ÙˆØ¸Ù</th>
-<th>Ø§Ù„Ù†ØªÙŠØ¬Ø©</th>
-<th>Ø§Ù„ØªÙØ§ØµÙŠÙ„</th>
+<th>الترتيب</th>
+<th>الموظف</th>
+<th>النتيجة</th>
+<th>التفاصيل</th>
 </tr>
 
 </thead>
@@ -260,11 +260,11 @@ selected
 <td>
 
 {% if loop.index == 1 %}
-ðŸ¥‡
+🥇
 {% elif loop.index == 2 %}
-ðŸ¥ˆ
+🥈
 {% elif loop.index == 3 %}
-ðŸ¥‰
+🥉
 {% else %}
 {{ loop.index }}
 {% endif %}
@@ -282,7 +282,7 @@ selected
     data-bs-target="#detailsModal"
     onclick="loadEmployee('{{ row['email'] }}')"
 >
-Ø¹Ø±Ø¶
+عرض
 </button>
 </td>
 
@@ -306,7 +306,7 @@ selected
 <div class="modal-header">
 
 <h5 class="modal-title">
-ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù…ÙˆØ¸Ù
+تفاصيل الموظف
 </h5>
 
 <button
@@ -322,7 +322,7 @@ class="modal-body"
 id="employee-details-area"
 >
 
-Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„...
+جاري التحميل...
 
 </div>
 

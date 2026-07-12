@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
-    <title>Ø§Ù„Ø£Ø¹Ù…Ø§Ù„</title>
+    <title>الأعمال</title>
 
     <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
 </head>
@@ -15,7 +15,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <h2>
-        Ù…Ø±Ø­Ø¨Ø§Ù‹ {{ name }} ðŸ‘‹
+        مرحباً {{ name }} 👋
     </h2>
 
 <div class="d-flex gap-2 align-items-center">
@@ -26,7 +26,7 @@
         data-bs-toggle="collapse"
         data-bs-target="#notificationsBox">
 
-        ðŸ””
+        🔔
 
         {% if notifications|length > 0 %}
         <span
@@ -38,15 +38,15 @@
     </button>
 
     <a href="/evaluations" class="btn btn-warning">
-        Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª
+        التقييمات
     </a>
 
         <a href="/export-report" class="btn btn-success">
-            ðŸ“¥ ØªÙ†Ø²ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§ØªÙŠ
+            📥 تنزيل بياناتي
         </a>
 
         <a href="/logout" class="btn btn-danger">
-            ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬
+            تسجيل الخروج
         </a>
 
     </div>
@@ -58,14 +58,14 @@
 
         <div class="card-header d-flex justify-content-between">
 
-    <span>Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª</span>
+    <span>الإشعارات</span>
 
     <a
         href="/clear-notifications"
         class="btn btn-sm btn-danger"
-        onclick="return confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§ØªØŸ')"
+        onclick="return confirm('هل تريد حذف جميع الإشعارات؟')"
     >
-        Ù…Ø³Ø­ Ø§Ù„ÙƒÙ„
+        مسح الكل
     </a>
 
 </div>
@@ -99,9 +99,9 @@ class="text-decoration-none flex-grow-1">
         <a
         href="/delete-notification/{{ n['id'] }}"
         class="btn btn-sm btn-outline-danger ms-2"
-        onclick="return confirm('Ø­Ø°Ù Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±ØŸ')">
+        onclick="return confirm('حذف الإشعار؟')">
 
-            âœ•
+            ✕
 
         </a>
 
@@ -112,7 +112,7 @@ class="text-decoration-none flex-grow-1">
 {% else %}
 
     <div class="text-muted">
-        Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø´Ø¹Ø§Ø±Ø§Øª
+        لا توجد إشعارات
     </div>
 
 {% endif %}
@@ -127,7 +127,7 @@ class="text-decoration-none flex-grow-1">
     <div class="card shadow p-4">
 
         <h4 class="mb-4">
-            Ø¥Ø¶Ø§ÙØ© Ø¹Ù…Ù„ Ø¬Ø¯ÙŠØ¯
+            إضافة عمل جديد
         </h4>
 
         <form method="POST" action="/works">
@@ -139,7 +139,7 @@ id="work_id"
 
             <div class="mb-3">
 
-                <label>Ø§Ù„Ø³Ù†Ø©</label>
+                <label>السنة</label>
 
                 <select name="year" class="form-select" required>
 
@@ -151,12 +151,12 @@ id="work_id"
 
             <div class="mb-3">
 
-                <label>Ø§Ù„ÙØªØ±Ø©</label>
+                <label>الفترة</label>
 
                 <select name="period" class="form-select" required>
 
-                    <option>Ø§Ù„Ù†ØµÙ Ø§Ù„Ø£ÙˆÙ„</option>
-                    <option>Ø§Ù„Ù†ØµÙ Ø§Ù„Ø«Ø§Ù†ÙŠ</option>
+                    <option>النصف الأول</option>
+                    <option>النصف الثاني</option>
 
                 </select>
 
@@ -164,21 +164,21 @@ id="work_id"
 
             <div class="mb-3">
 
-                <label>Ù†ÙˆØ¹ Ø§Ù„Ø¹Ù…Ù„</label>
+                <label>نوع العمل</label>
 
                 <select name="work_type" id="work_type" class="form-select" required>
 
-                    <option>Ù…Ø´Ø§Ø±ÙƒØ© Ø§Ù„Ø§Ø³ØªØ·Ù„Ø§Ø¹Ø§Øª</option>
-                    <option>Ù…Ø´Ø§Ø±ÙƒØ© Ø§Ù„Ø§Ø¬ØªÙ…Ø§Ø¹Ø§Øª</option>
-                    <option>Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ø§Ø³ØªÙ…Ø§Ø±Ø§Øª</option>
-                    <option>ØªÙ‚Ø§Ø±ÙŠØ± Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©</option>
-                    <option>ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ±Ù‚ÙŠØ©</option>
-                    <option>ØªÙ†Ø¸ÙŠÙ Ø¹ÙŠÙ†Ø§Øª</option>
-                    <option>Ø¥Ø´Ø±Ø§Ù Ø¬Ù‡Ø§Øª</option>
-                    <option>Ø¯Ø±Ø§Ø³Ø© Ø·Ù„Ø¨Ø§Øª</option>
-                    <option>Ø£Ø¹Ù…Ø§Ù„ Ù…Ø¨ØªÙƒØ±Ø©</option>
-                    <option>Ø¯ÙˆØ±Ø§Øª ÙˆØ£ÙˆØ±Ø§Ù‚ Ø¹Ù…Ù„</option>
-                    <option>Ù…ØªØ§Ø¨Ø¹Ø© Ø¨Ø±Ø§Ù…Ø¬ ÙˆØªØ·Ø¨ÙŠÙ‚Ø§Øª Ø§Ù„Ø¯Ø§Ø¦Ø±Ø©</option>
+                    <option>مشاركة الاستطلاعات</option>
+                    <option>مشاركة الاجتماعات</option>
+                    <option>مراجعة الاستمارات</option>
+                    <option>تقارير إلكترونية</option>
+                    <option>تقارير ورقية</option>
+                    <option>تنظيف عينات</option>
+                    <option>إشراف جهات</option>
+                    <option>دراسة طلبات</option>
+                    <option>أعمال مبتكرة</option>
+                    <option>دورات وأوراق عمل</option>
+                    <option>متابعة برامج وتطبيقات الدائرة</option>
 
                 </select>
 
@@ -186,20 +186,20 @@ id="work_id"
             <div id="dateFields" style="display:none;">
 
                 <div class="mb-3">
-                    <label>ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¨Ø¯Ø¡</label>
+                    <label>تاريخ البدء</label>
                     <input type="date" id="start_date" name="start_date" class="form-control">
                 </div>
 
                 <div class="mb-3">
-                    <label>ØªØ§Ø±ÙŠØ® Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡</label>
+                    <label>تاريخ الانتهاء</label>
                     <input type="date" id="end_date" name="end_date" class="form-control">
                 </div>
 
                 <div class="mb-3">
-                    <label>Ø§Ù„Ø£ÙŠØ§Ù… Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©</label>
+                    <label>الأيام المحددة</label>
 
                     <select id="target_days" name="target_days" class="form-select">
-                        <option value="">Ø§Ø®ØªØ±</option>
+                        <option value="">اختر</option>
                         <option value="5">5</option>
                         <option value="10">10</option>
                     </select>
@@ -210,7 +210,7 @@ id="work_id"
 
             <div class="mb-3">
 
-                <label>ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø¹Ù…Ù„</label>
+                <label>تفاصيل العمل</label>
 
                 <textarea name="work_details" class="form-control" required></textarea>
 
@@ -221,7 +221,7 @@ type="submit"
 id="saveBtn"
 class="btn btn-success"
 >
-Ø­ÙØ¸
+حفظ
 </button>
         </form>
 
@@ -229,7 +229,7 @@ class="btn btn-success"
 <hr class="my-4">
 
 <h4>
-    Ø£Ø¹Ù…Ø§Ù„ÙŠ
+    أعمالي
 </h4>
 
 <table class="table table-bordered">
@@ -238,18 +238,18 @@ class="btn btn-success"
 
 <tr>
     <th>#</th>
-    <th>Ø§Ù„Ù…ÙˆØ¸Ù</th>
-    <th>Ø§Ù„Ø³Ù†Ø©</th>
-    <th>Ø§Ù„ÙØªØ±Ø©</th>
-    <th>Ù†ÙˆØ¹ Ø§Ù„Ø¹Ù…Ù„</th>
-    <th>Ø§Ù„ØªÙØ§ØµÙŠÙ„</th>
-    <th>ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¨Ø¯Ø¡</th>
-    <th>ØªØ§Ø±ÙŠØ® Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡</th>
-    <th>Ø§Ù„Ø£ÙŠØ§Ù… Ø§Ù„ÙØ¹Ù„ÙŠØ©</th>
-    <th>Ø§Ù„Ø£ÙŠØ§Ù… Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©</th>
-    <th>Ø§Ù„Ø­Ø§Ù„Ø©</th>
-<th>Ù…Ù„Ø§Ø­Ø¸Ø© Ø§Ù„Ù…Ø¯ÙŠØ±</th>
-    <th>Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª</th>
+    <th>الموظف</th>
+    <th>السنة</th>
+    <th>الفترة</th>
+    <th>نوع العمل</th>
+    <th>التفاصيل</th>
+    <th>تاريخ البدء</th>
+    <th>تاريخ الانتهاء</th>
+    <th>الأيام الفعلية</th>
+    <th>الأيام المحددة</th>
+    <th>الحالة</th>
+<th>ملاحظة المدير</th>
+    <th>إجراءات</th>
 </tr>
 
     </thead>
@@ -281,17 +281,17 @@ class="btn btn-success"
 
 {% if row["status"] == "approved" %}
 <span class="badge bg-success">
-Ù…Ø¹ØªÙ…Ø¯
+معتمد
 </span>
 
 {% elif row["status"] == "returned" %}
 <span class="badge bg-warning text-dark">
-Ù…Ø±Ø¬Ø¹
+مرجع
 </span>
 
 {% else %}
 <span class="badge bg-secondary">
-Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯
+بانتظار الاعتماد
 </span>
 
 {% endif %}
@@ -317,15 +317,15 @@ onclick="editWork(
 '{{ row["target_days"] or "" }}'
 )"
 >
-ØªØ¹Ø¯ÙŠÙ„
+تعديل
 </button>
 
 <a
 href="/delete-work/{{ row['id'] }}"
 class="btn btn-sm btn-danger"
-onclick="return confirm('Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ø§Ù„Ø¹Ù…Ù„ØŸ')"
+onclick="return confirm('هل تريد حذف العمل؟')"
 >
-Ø­Ø°Ù
+حذف
 </a>
 
 </td>
@@ -355,13 +355,13 @@ document.querySelector('select[name="period"]').value = period;
 document.querySelector('select[name="work_type"]').value = workType;
 document.querySelector('textarea[name="work_details"]').value = details;
 document.getElementById("work_id").value = id;
-document.getElementById("saveBtn").innerText = "ØªØ­Ø¯ÙŠØ«";
+document.getElementById("saveBtn").innerText = "تحديث";
 
 document.getElementById("start_date").value = startDate;
 document.getElementById("end_date").value = endDate;
 document.getElementById("target_days").value = targetDays;
 document.getElementById("work_id").value = id;
-document.getElementById("saveBtn").innerText = "ØªØ­Ø¯ÙŠØ«";
+document.getElementById("saveBtn").innerText = "تحديث";
 
 toggleDates();
 
@@ -380,9 +380,9 @@ function toggleDates() {
     const value = workType.value;
 
     if (
-        value === "ØªÙ‚Ø§Ø±ÙŠØ± Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©" ||
-        value === "ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ±Ù‚ÙŠØ©" ||
-        value === "Ø¯Ø±Ø§Ø³Ø© Ø·Ù„Ø¨Ø§Øª"
+        value === "تقارير إلكترونية" ||
+        value === "تقارير ورقية" ||
+        value === "دراسة طلبات"
     ) {
         dateFields.style.display = "block";
     }
@@ -398,9 +398,9 @@ document.querySelector("form").addEventListener("submit", function(e){
     const workType = document.getElementById("work_type").value;
 
     if(
-        workType === "ØªÙ‚Ø§Ø±ÙŠØ± Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©" ||
-        workType === "ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ±Ù‚ÙŠØ©" ||
-        workType === "Ø¯Ø±Ø§Ø³Ø© Ø·Ù„Ø¨Ø§Øª"
+        workType === "تقارير إلكترونية" ||
+        workType === "تقارير ورقية" ||
+        workType === "دراسة طلبات"
     ){
 
         const startDate = document.getElementById("start_date").value;
@@ -409,7 +409,7 @@ document.querySelector("form").addEventListener("submit", function(e){
 
         if(!startDate || !endDate || !targetDays){
 
-            alert("ÙŠØ±Ø¬Ù‰ ØªØ¹Ø¨Ø¦Ø© ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¨Ø¯Ø¡ ÙˆØªØ§Ø±ÙŠØ® Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡ ÙˆØ§Ù„Ø£ÙŠØ§Ù… Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©");
+            alert("يرجى تعبئة تاريخ البدء وتاريخ الانتهاء والأيام المحددة");
 
             e.preventDefault();
         }
