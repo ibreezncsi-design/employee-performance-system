@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, session
 import os
 import psycopg2
 from psycopg2.extras import DictCursor
+import smtplib
+from email.message import EmailMessage
 
 # Cursor متوافق مع نمط الاستعلامات القديم في المشروع
 class FluentDictCursor(DictCursor):
@@ -83,6 +85,77 @@ def get_db():
         cursor_factory=FluentDictCursor
     )
 
+def send_notification_email(to_email, message):
+
+    try:
+        email_address = os.environ.get("EMAIL_ADDRESS")
+        email_password = os.environ.get("EMAIL_PASSWORD")
+
+        system_url = "https://employee-performance-system-sse2.onrender.com"
+
+        msg = EmailMessage()
+        msg["Subject"] = "إشعار جديد - نظام قياس الأداء"
+        msg["From"] = email_address
+        msg["To"] = to_email
+
+        msg.set_content(f"""
+السلام عليكم ورحمة الله وبركاته،
+
+لديك إشعار جديد في نظام قياس الأداء:
+
+{message}
+
+للدخول إلى النظام:
+{system_url}
+
+مع التحية،
+نظام قياس الأداء
+""")
+
+        msg.add_alternative(f"""
+        <html dir="rtl">
+            <body style="font-family: Arial; text-align: right;">
+
+                <p>السلام عليكم ورحمة الله وبركاته،</p>
+
+                <p>لديك إشعار جديد في نظام قياس الأداء:</p>
+
+                <h3>{message}</h3>
+
+                <p>يمكنك الدخول إلى النظام لمتابعة التفاصيل:</p>
+
+                <a href="{system_url}"
+                   style="
+                       background-color: #7c3aed;
+                       color: white;
+                       padding: 12px 25px;
+                       text-decoration: none;
+                       border-radius: 8px;
+                       display: inline-block;
+                   ">
+                    الدخول إلى النظام
+                </a>
+
+                <br><br>
+
+                <p>
+                    مع التحية،<br>
+                    نظام قياس الأداء
+                </p>
+
+            </body>
+        </html>
+        """, subtype="html")
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(email_address, email_password)
+            smtp.send_message(msg)
+
+        print(f"EMAIL SENT TO: {to_email}")
+
+    except Exception as e:
+        print(f"EMAIL ERROR: {e}")
+
 def add_notification(c, email, message, work_id=None, evaluation_id=None):
 
     if work_id:
@@ -124,6 +197,7 @@ def add_notification(c, email, message, work_id=None, evaluation_id=None):
         evaluation_id,
         datetime.now().strftime("%Y-%m-%d %H:%M")
     ))
+    send_notification_email(email, message)
 
 
 def init_db():
