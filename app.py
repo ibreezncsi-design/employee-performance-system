@@ -2517,5 +2517,15 @@ def migrate_old_data():
         sqlite_conn.close()
         pg_conn.close()
 
+@app.route("/test-email")
+def test_email():
+
+    send_notification_email(
+        "ibreezncsi@gmail.com",
+        "🧪 هذا اختبار لإشعارات نظام قياس الأداء"
+    )
+
+    return "EMAIL TEST DONE"
+
 if __name__ == "__main__":
     app.run(debug=True)
