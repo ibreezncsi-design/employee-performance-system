@@ -2,6 +2,13 @@ from flask import Flask, render_template, request, redirect, session
 import os
 import psycopg2
 from psycopg2.extras import DictCursor
+
+# Cursor متوافق مع نمط الاستعلامات القديم في المشروع
+class FluentDictCursor(DictCursor):
+    def execute(self, query, vars=None):
+        super().execute(query, vars)
+        return self
+
 from datetime import datetime
 import pandas as pd
 from flask import send_file
@@ -73,7 +80,7 @@ def get_db():
 
     return psycopg2.connect(
         database_url,
-        cursor_factory=DictCursor
+        cursor_factory=FluentDictCursor
     )
 
 def add_notification(c, email, message, work_id=None, evaluation_id=None):
@@ -2330,7 +2337,111 @@ def check_notification_columns():
 
     return "<br>".join([r["column_name"] for r in rows])
 
+@app.route("/migrate-old-data")
+def migrate_old_data():
 
+    import sqlite3
+    from psycopg2.extras import execute_values
+
+    sqlite_conn = sqlite3.connect("users.db")
+    sqlite_conn.row_factory = sqlite3.Row
+
+    pg_conn = get_db()
+    pg_cursor = pg_conn.cursor()
+
+    tables = [
+        "users",
+        "works",
+        "evaluations",
+        "weights",
+        "notifications"
+    ]
+
+    result = []
+
+    try:
+
+        for table in tables:
+
+            rows = sqlite_conn.execute(
+                f"SELECT * FROM {table}"
+            ).fetchall()
+
+            if not rows:
+                result.append(f"{table}: 0")
+                continue
+
+            pg_cursor.execute("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                AND table_name = %s
+                ORDER BY ordinal_position
+            """, (table,))
+
+            pg_columns = [
+                row["column_name"]
+                for row in pg_cursor.fetchall()
+            ]
+
+            common_columns = [
+                col
+                for col in rows[0].keys()
+                if col in pg_columns
+            ]
+
+            values = [
+                tuple(row[col] for col in common_columns)
+                for row in rows
+            ]
+
+            columns_sql = ", ".join(common_columns)
+
+            pg_cursor.execute(
+                f"DELETE FROM {table}"
+            )
+
+            execute_values(
+                pg_cursor,
+                f"""
+                INSERT INTO {table}
+                ({columns_sql})
+                VALUES %s
+                """,
+                values
+            )
+
+            if "id" in common_columns:
+
+                pg_cursor.execute(f"""
+                    SELECT setval(
+                        pg_get_serial_sequence('{table}', 'id'),
+                        COALESCE(
+                            (SELECT MAX(id) FROM {table}),
+                            1
+                        ),
+                        true
+                    )
+                """)
+
+            result.append(
+                f"{table}: {len(rows)} migrated"
+            )
+
+        pg_conn.commit()
+
+        return "<br>".join(result)
+
+    except Exception as e:
+
+        pg_conn.rollback()
+
+        return f"ERROR: {e}"
+
+    finally:
+
+        sqlite_conn.close()
+        pg_conn.close()
 
 if __name__ == "__main__":
     app.run(debug=True)
