@@ -2515,6 +2515,217 @@ def migrate_old_data():
 
         sqlite_conn.close()
         pg_conn.close()
+@app.route("/sync-excel-works")
+def sync_excel_works():
+
+    if "email" not in session:
+        return redirect("/")
+
+    if session["role"] != "admin":
+        return redirect("/")
+
+    file_path = "employee_works_new.xlsm"
+
+    employee_emails = {
+        "هدى": "Huda@ncsi.gov.om",
+        "أحلام": "aismaili@ncsi.gov.om",
+        "هود": "hbuloshi@ncsi.gov.om",
+        "عايشة": "Aisha.Rashid@ncsi.gov.om",
+        "مهند": "almuhannad@ncsi.gov.om",
+        "بلقيس": "B.Ghassani@ncsi.gov.om",
+        "فاطمة": "fbuloshi@ncsi.gov.om"
+    }
+
+    df = pd.read_excel(
+        file_path,
+        sheet_name="الاعمال",
+        usecols="A:I",
+        nrows=1000
+    )
+
+    df = df.dropna(
+        subset=["اسم الموظف", "تفاصيل العمل"]
+    )
+
+    conn = get_db()
+    c = conn.cursor()
+
+    updated = 0
+    inserted = 0
+    skipped = 0
+
+    try:
+
+        for _, row in df.iterrows():
+
+            employee_name = str(
+                row["اسم الموظف"]
+            ).strip()
+
+            user_email = employee_emails.get(
+                employee_name
+            )
+
+            if not user_email:
+                skipped += 1
+                continue
+
+            year = int(row["السنة"])
+
+            period = str(
+                row["الفترة"]
+            ).strip()
+
+            work_type = str(
+                row["نوع العمل"]
+            ).strip()
+
+            work_details = str(
+                row["تفاصيل العمل"]
+            ).strip()
+
+            def clean_value(value):
+
+                if pd.isna(value):
+                    return None
+
+                return value
+
+            def clean_date(value):
+
+                if pd.isna(value):
+                    return None
+
+                if value is False:
+                    return None
+
+                if isinstance(value, pd.Timestamp):
+                    return value.strftime("%Y-%m-%d")
+
+                value = str(value).strip()
+
+                if value.lower() in [
+                    "false",
+                    "nan",
+                    "none",
+                    ""
+                ]:
+                    return None
+
+                return value
+
+            start_date = clean_date(
+                row["تاريخ البدء"]
+            )
+
+            end_date = clean_date(
+                row["تاريخ الانتهاء"]
+            )
+
+            actual_days = clean_value(
+                row["الأيام الفعلية"]
+            )
+
+            target_days = clean_value(
+                row["الأيام المحددة"]
+            )
+
+            if actual_days is not None:
+                actual_days = int(actual_days)
+
+            if target_days is not None:
+                target_days = int(target_days)
+
+            existing = c.execute("""
+                SELECT id
+                FROM works
+                WHERE user_email = %s
+                AND year = %s
+                AND period = %s
+                AND work_details = %s
+                ORDER BY id
+                LIMIT 1
+            """, (
+                user_email,
+                year,
+                period,
+                work_details
+            )).fetchone()
+
+            if existing:
+
+                c.execute("""
+                    UPDATE works
+                    SET
+                        work_type = %s,
+                        start_date = %s,
+                        end_date = %s,
+                        actual_days = %s,
+                        target_days = %s
+                    WHERE id = %s
+                """, (
+                    work_type,
+                    start_date,
+                    end_date,
+                    actual_days,
+                    target_days,
+                    existing["id"]
+                ))
+
+                updated += 1
+
+            else:
+
+                c.execute("""
+                    INSERT INTO works
+                    (
+                        user_email,
+                        year,
+                        period,
+                        work_type,
+                        work_details,
+                        start_date,
+                        end_date,
+                        actual_days,
+                        target_days,
+                        status
+                    )
+                    VALUES
+                    (%s, %s, %s, %s, %s,
+                     %s, %s, %s, %s, %s)
+                """, (
+                    user_email,
+                    year,
+                    period,
+                    work_type,
+                    work_details,
+                    start_date,
+                    end_date,
+                    actual_days,
+                    target_days,
+                    "pending"
+                ))
+
+                inserted += 1
+
+        conn.commit()
+
+        return f"""
+        SYNC DONE<br><br>
+        UPDATED: {updated}<br>
+        INSERTED: {inserted}<br>
+        SKIPPED: {skipped}
+        """
+
+    except Exception as e:
+
+        conn.rollback()
+
+        return f"SYNC ERROR: {e}"
+
+    finally:
+
+        conn.close()
 
 @app.route("/test-email")
 def test_email():
