@@ -313,7 +313,11 @@ def works():
 
     if session["role"] == "admin":
         return redirect("/admin")
-    
+
+    # ==========================================
+    # إضافة / تعديل عمل
+    # ==========================================
+
     if request.method == "POST":
 
         print("POST WORKING")
@@ -337,23 +341,21 @@ def works():
         if not start_date or not end_date:
             return "يرجى تعبئة تاريخ البدء وتاريخ الانتهاء"
 
-
         # تحويل التواريخ
+
         start = datetime.strptime(start_date, "%Y-%m-%d")
         end = datetime.strptime(end_date, "%Y-%m-%d")
 
-
         # التحقق من صحة ترتيب التواريخ
+
         if end < start:
             return "تاريخ الانتهاء يجب أن يكون بعد أو مساويًا لتاريخ البدء"
-
 
         # ==========================================
         # حساب الأيام الفعلية لجميع أنواع الأعمال
         # ==========================================
 
         actual_days = (end - start).days + 1
-
 
         # ==========================================
         # الأيام المحددة مطلوبة فقط لهذه الأنواع
@@ -384,6 +386,10 @@ def works():
         c = conn.cursor()
 
         work_id = request.form.get("work_id")
+
+        # ==========================================
+        # تعديل عمل موجود
+        # ==========================================
 
         if work_id:
 
@@ -416,28 +422,39 @@ def works():
             ))
 
             current_work_id = work_id
-            action_message = f"✏️ قام {session['name']} بتعديل عمل"
+
+            action_message = (
+                f"✏️ قام {session['name']} بتعديل عمل"
+            )
 
             print("UPDATE DONE")
+
+        # ==========================================
+        # إضافة عمل جديد
+        # ==========================================
 
         else:
 
             c.execute("""
-                    INSERT INTO works
-                    (
-                        user_email,
-                        year,
-                        period,
-                        work_type,
-                        work_details,
-                        start_date,
-                        end_date,
-                        actual_days,
-                        target_days,
-                        status
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    RETURNING id
+                INSERT INTO works
+                (
+                    user_email,
+                    year,
+                    period,
+                    work_type,
+                    work_details,
+                    start_date,
+                    end_date,
+                    actual_days,
+                    target_days,
+                    status
+                )
+                VALUES
+                (
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s
+                )
+                RETURNING id
             """, (
                 session["email"],
                 year,
@@ -452,56 +469,87 @@ def works():
             ))
 
             print("INSERT DONE")
+
             current_work_id = c.fetchone()["id"]
-            action_message = f"📝 قام {session['name']} بإضافة عمل جديد"
 
-        
+            action_message = (
+                f"📝 قام {session['name']} بإضافة عمل جديد"
+            )
 
-        
+        # ==========================================
+        # إرسال إشعار للأدمن
+        # ==========================================
 
         for email, info in ALLOWED_USERS.items():
 
             if info["role"] == "admin":
 
                 add_notification(
-                c,
-                email,
-                action_message,
-                current_work_id
-            )
+                    c,
+                    email,
+                    action_message,
+                    current_work_id
+                )
 
         conn.commit()
         conn.close()
 
-
         return redirect("/works")
 
-    # ==========================
-    # جلب الأعمال للعرض
-    # ==========================
+    # ==========================================
+    # GET - عرض أعمال الموظف
+    # ==========================================
 
     conn = get_db()
     c = conn.cursor()
 
-    if session["role"] == "admin":
+    # ==========================================
+    # قراءة فلتر نوع العمل
+    # ==========================================
 
-        rows = c.execute("""
-            SELECT *
-            FROM works
-            ORDER BY id DESC
-        """).fetchall()
+    selected_work_type = request.args.get(
+        "work_type",
+        "الكل"
+    )
 
-    else:
+    # ==========================================
+    # بناء الاستعلام
+    # الموظف يرى أعماله فقط
+    # ==========================================
 
-        rows = c.execute("""
-            SELECT *
-            FROM works
-            WHERE user_email = %s
-            ORDER BY id DESC
-        """, (
-            session["email"],
-        )).fetchall()
+    query = """
+        SELECT *
+        FROM works
+        WHERE user_email = %s
+    """
 
+    params = [session["email"]]
+
+    # إذا اختار الموظف نوع عمل محدد
+    # نضيفه إلى الفلترة
+
+    if selected_work_type != "الكل":
+
+        query += """
+            AND work_type = %s
+        """
+
+        params.append(selected_work_type)
+
+    # ترتيب الأعمال من الأحدث إلى الأقدم
+
+    query += """
+        ORDER BY id DESC
+    """
+
+    rows = c.execute(
+        query,
+        params
+    ).fetchall()
+
+    # ==========================================
+    # جلب الإشعارات
+    # ==========================================
 
     notifications = c.execute("""
         SELECT *
@@ -512,20 +560,34 @@ def works():
         session["email"],
     )).fetchall()
 
+    # ==========================================
+    # عدد الإشعارات غير المقروءة
+    # ==========================================
+
     unread_count = c.execute("""
-    SELECT COUNT(*)
-    FROM notifications
-    WHERE user_email = %s
-    AND is_read = 0
-    """,(
+        SELECT COUNT(*)
+        FROM notifications
+        WHERE user_email = %s
+        AND is_read = 0
+    """, (
         session["email"],
     )).fetchone()[0]
 
     conn.close()
+
+    # ==========================================
+    # أسماء المستخدمين
+    # ==========================================
+
     user_names = {}
 
     for email, info in ALLOWED_USERS.items():
+
         user_names[email] = info["name"]
+
+    # ==========================================
+    # إرسال البيانات إلى works.html
+    # ==========================================
 
     return render_template(
         "works.html",
@@ -533,7 +595,10 @@ def works():
         notifications=notifications,
         unread_count=unread_count,
         works=rows,
-        user_names=user_names
+        user_names=user_names,
+
+        # مهم للفلتر
+        selected_work_type=selected_work_type
     )
 
 @app.route("/dashboard")
