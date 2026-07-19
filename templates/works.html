@@ -183,30 +183,50 @@ id="work_id"
                 </select>
 
             </div>
-            <div id="dateFields" style="display:none;">
+<!-- التواريخ مطلوبة لجميع أنواع الأعمال -->
 
-                <div class="mb-3">
-                    <label>تاريخ البدء</label>
-                    <input type="date" id="start_date" name="start_date" class="form-control">
-                </div>
+<div class="mb-3">
+    <label>تاريخ البدء</label>
 
-                <div class="mb-3">
-                    <label>تاريخ الانتهاء</label>
-                    <input type="date" id="end_date" name="end_date" class="form-control">
-                </div>
+    <input
+        type="date"
+        id="start_date"
+        name="start_date"
+        class="form-control"
+        required
+    >
+</div>
 
-                <div class="mb-3">
-                    <label>الأيام المحددة</label>
+<div class="mb-3">
+    <label>تاريخ الانتهاء</label>
 
-                    <select id="target_days" name="target_days" class="form-select">
-                        <option value="">اختر</option>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                    </select>
+    <input
+        type="date"
+        id="end_date"
+        name="end_date"
+        class="form-control"
+        required
+    >
+</div>
 
-                </div>
 
-            </div>
+<!-- الأيام المحددة تظهر فقط لبعض أنواع الأعمال -->
+
+<div id="targetDaysField" class="mb-3" style="display:none;">
+
+    <label>الأيام المحددة</label>
+
+    <select
+        id="target_days"
+        name="target_days"
+        class="form-select"
+    >
+        <option value="">اختر</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+    </select>
+
+</div>
 
             <div class="mb-3">
 
@@ -373,21 +393,31 @@ behavior:"smooth"
 }
 
 const workType = document.getElementById("work_type");
-const dateFields = document.getElementById("dateFields");
+const targetDaysField = document.getElementById("targetDaysField");
+const targetDays = document.getElementById("target_days");
 
 function toggleDates() {
 
     const value = workType.value;
 
-    if (
+    const needsTargetDays =
         value === "تقارير إلكترونية" ||
         value === "تقارير ورقية" ||
-        value === "دراسة طلبات"
-    ) {
-        dateFields.style.display = "block";
-    }
-    else {
-        dateFields.style.display = "none";
+        value === "دراسة طلبات";
+
+    if (needsTargetDays) {
+
+        targetDaysField.style.display = "block";
+        targetDays.required = true;
+
+    } else {
+
+        targetDaysField.style.display = "none";
+        targetDays.required = false;
+
+        // نمسح القيمة حتى لا تُحفظ أيام محددة
+        // لعمل لا يحتاج أياماً محددة
+        targetDays.value = "";
     }
 }
 
@@ -395,23 +425,49 @@ workType.addEventListener("change", toggleDates);
 
 document.querySelector("form").addEventListener("submit", function(e){
 
-    const workType = document.getElementById("work_type").value;
+    const selectedWorkType =
+        document.getElementById("work_type").value;
 
-    if(
-        workType === "تقارير إلكترونية" ||
-        workType === "تقارير ورقية" ||
-        workType === "دراسة طلبات"
-    ){
+    const startDate =
+        document.getElementById("start_date").value;
 
-        const startDate = document.getElementById("start_date").value;
-        const endDate = document.getElementById("end_date").value;
-        const targetDays = document.getElementById("target_days").value;
+    const endDate =
+        document.getElementById("end_date").value;
 
-        if(!startDate || !endDate || !targetDays){
+    const targetDays =
+        document.getElementById("target_days").value;
 
-            alert("يرجى تعبئة تاريخ البدء وتاريخ الانتهاء والأيام المحددة");
 
+    // التاريخ مطلوب لجميع الأعمال
+    if (!startDate || !endDate) {
+
+        alert("يرجى تعبئة تاريخ البدء وتاريخ الانتهاء");
+        e.preventDefault();
+        return;
+    }
+
+
+    // منع أن يكون تاريخ الانتهاء قبل تاريخ البدء
+    if (endDate < startDate) {
+
+        alert("تاريخ الانتهاء يجب أن يكون بعد أو مساويًا لتاريخ البدء");
+        e.preventDefault();
+        return;
+    }
+
+
+    // الأيام المحددة مطلوبة فقط لهذه الأنواع
+    if (
+        selectedWorkType === "تقارير إلكترونية" ||
+        selectedWorkType === "تقارير ورقية" ||
+        selectedWorkType === "دراسة طلبات"
+    ) {
+
+        if (!targetDays) {
+
+            alert("يرجى اختيار الأيام المحددة");
             e.preventDefault();
+            return;
         }
     }
 
