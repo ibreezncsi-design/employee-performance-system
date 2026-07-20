@@ -321,6 +321,10 @@ def works():
     if request.method == "POST":
 
         print("POST WORKING")
+        current_filter = request.form.get(
+        "current_filter",
+        "الكل"
+         )
 
         year = request.form["year"]
         period = request.form["period"]
@@ -494,7 +498,17 @@ def works():
         conn.commit()
         conn.close()
 
-        return redirect("/works")
+        # الرجوع لنفس الفلتر بعد إضافة أو تعديل العمل
+        if current_filter and current_filter != "الكل":
+
+            return redirect(
+                url_for(
+                    "works",
+                    work_type=current_filter
+                )
+            )
+
+        return redirect(url_for("works"))
 
     # ==========================================
     # GET - عرض أعمال الموظف

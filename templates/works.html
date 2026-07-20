@@ -130,12 +130,20 @@ class="text-decoration-none flex-grow-1">
             إضافة عمل جديد
         </h4>
 
-        <form method="POST" action="/works">
-            <input
-type="hidden"
-name="work_id"
-id="work_id"
->
+<form method="POST" action="/works">
+
+    <input
+        type="hidden"
+        name="work_id"
+        id="work_id"
+    >
+
+    <!-- الاحتفاظ بالفلتر الحالي بعد تعديل العمل -->
+    <input
+        type="hidden"
+        name="current_filter"
+        value="{{ selected_work_type }}"
+    >
 
             <div class="mb-3">
 
